@@ -23,6 +23,18 @@ case ${ROOT_ARG_TYPE:-uuid} in
 		;;
 esac
 
+case $(sed -nE '0,/vendor_id.*: (.*)/s//\1/p' /proc/cpuinfo) in
+	GenuineIntel)
+		vendor='intel'
+		;;
+	AuthenticAMD)
+		vendor='amd'
+		;;
+	*)
+		vendor=''
+		;;
+esac
+
 while read -r kernel; do
 	kver=$(
 		echo "$kernel" |
@@ -53,7 +65,9 @@ while read -r kernel; do
 			{
 				printf 'title   %s, kernel %s, %s\n' "$NAME" "$kver" "$type"
 				printf 'linux   /vmlinuz-%s-x86_64\n' "$kver"
-				printf 'initrd  /intel-ucode.img\n'
+				if [[ -f "boot/$vendor-ucode.img" ]]; then
+					printf 'initrd  /%s-ucode.img\n' "$vendor"
+				fi
 				printf 'initrd  /%s.img\n' "$initrd"
 				printf 'options root="%s" %s' "$ROOT_ARG" "$CMDLINE"
 			} > "boot/loader/entries/$ID-linux-$kver-$type.conf"
