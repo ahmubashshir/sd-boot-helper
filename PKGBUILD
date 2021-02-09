@@ -1,11 +1,11 @@
 # Maintainer: Ahmad Hasan Mubashshir <ahmubashshir@gmail.com>
 # pkg: git
 pkgname=sd-boot-helper-git
-pkgver=r.
+pkgver=r.0
 pkgrel=1
 pkgdesc="Add/Update/Remove sd-boot entries automatically"
 arch=(any)
-url=""
+url="https://github.com/ahmubashshir/sd-boot-helper"
 license=('GPL')
 depends=('base')
 source=(
