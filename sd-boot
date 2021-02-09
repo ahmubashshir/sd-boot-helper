@@ -31,6 +31,7 @@ while read -r kernel; do
 				-e 's@^boot/vmlinuz-(.*)-x.*@\1@p'
 	)
 	if [[ -f "$kernel" ]]; then
+		[[ -f "boot/vmlinuz-$kver-x86_64" ]] || continue
 		for type in default fallback recovery; do
 			initrd="initramfs-$kver-x86_64"
 			CMDLINE="${CMDLINE_LINUX:-quiet rw}"
