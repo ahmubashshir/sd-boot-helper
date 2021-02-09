@@ -1,0 +1,8 @@
+#!/bin/bash
+if [[ $(id -u) != 0 ]]; then
+	echo "Run this as root"
+	exit
+fi
+cd /
+rm boot/loader/entries/*-linux-*.conf
+find boot -maxdepth 1 -name 'vmlinuz*' | /usr/share/libalpm/scripts/sd-boot

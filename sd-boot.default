@@ -1,0 +1,4 @@
+CMDLINE_LINUX='quiet rw'
+ROOT_ARG_TYPE=uuid # supported value: uuid part-uuid label
+DISABLE_FALLBACK=true
+DISABLE_RECOVERY=true

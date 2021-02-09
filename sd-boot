@@ -1,0 +1,69 @@
+#!/bin/bash -e
+
+source /etc/os-release
+source /etc/default/sd-boot
+
+ROOT=$(grep ' / ' /etc/mtab | cut -d ' ' -f1)
+
+case $ROOT_ARG_TYPE in
+	uuid)
+		ROOT_ARG="UUID=$(blkid -s UUID -o value "$ROOT" 2> /dev/null)"
+		;;
+	part-uuid)
+		ROOT_ARG="PARTUUID=$(blkid -s PARTUUID -o value "$ROOT" 2> /dev/null)"
+		;;
+	label)
+		ROOT_ARG="LABEL=$(blkid -s LABEL -o value "$ROOT" 2> /dev/null)"
+		;;
+	*)
+		echo "  Invalid ROOT_ARG_TYPE: $ROOT_ARG_TYPE" >&2
+		echo "  Falling back to ROOT_ARG_TYPE: uuid" >&2
+		echo
+		ROOT_ARG="UUID=$(blkid -s UUID -o value "$ROOT" 2> /dev/null)"
+		;;
+esac
+
+while read -r kernel; do
+	kver=$(
+		echo "$kernel" |
+			/bin/sed -nE \
+				-e 's@^.*modules/([[:digit:]]+\.[[:digit:]]+)\..*/vmlinuz$@\1@p' \
+				-e 's@^boot/vmlinuz-(.*)-x.*@\1@p'
+	)
+	if [[ -f "$kernel" ]]; then
+		for type in default fallback recovery; do
+			initrd="initramfs-$kver-x86_64"
+			CMDLINE="$CMDLINE_LINUX"
+			if [[ $type == fallback ]] && [[ $DISABLE_FALLBACK != true ]]; then
+				initrd="$initrd-fallback"
+			elif [[ $type == recovery ]] && [[ $DISABLE_RECOVERY != true ]]; then
+				initrd="$initrd-fallback"
+				CMDLINE="$CMDLINE single"
+			elif [[ $type == recovery ]] || [[ $type == fallback ]] || ! [[ -f boot/$initrd.img ]]; then
+				continue
+			fi
+			# config
+			if [[ -f boot/loader/entries/$ID-linux-$kver-$type.conf ]]; then
+				printf '  Updating'
+			else
+				printf '  Adding'
+			fi
+			printf ' entry for kernel %s (%s)\n' "$kver" "$type"
+			{
+				printf 'title   %s, kernel %s, %s\n' "$NAME" "$kver" "$type"
+				printf 'linux   /vmlinuz-%s-x86_64\n' "$kver"
+				printf 'initrd  /intel-ucode.img\n'
+				printf 'initrd  /%s.img\n' "$initrd"
+				printf 'options root="%s" %s' "$ROOT_ARG" "$CMDLINE"
+			} > "boot/loader/entries/$ID-linux-$kver-$type.conf"
+		done
+	else
+		for type in default fallback recovery; do
+			entry="$ID-linux-$kver-$type"
+			if [[ -f "boot/loader/entries/$entry.conf" ]]; then
+				printf '  Removing entry for kernel %s (%s)\n' "$kver" "$type"
+				rm -f "boot/loader/entries/$entry.conf"
+			fi
+		done
+	fi
+done
