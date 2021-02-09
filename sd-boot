@@ -5,7 +5,7 @@ source /etc/default/sd-boot
 
 ROOT=$(grep ' / ' /etc/mtab | cut -d ' ' -f1)
 
-case $ROOT_ARG_TYPE in
+case ${ROOT_ARG_TYPE:-uuid} in
 	uuid)
 		ROOT_ARG="UUID=$(blkid -s UUID -o value "$ROOT" 2> /dev/null)"
 		;;
@@ -33,7 +33,7 @@ while read -r kernel; do
 	if [[ -f "$kernel" ]]; then
 		for type in default fallback recovery; do
 			initrd="initramfs-$kver-x86_64"
-			CMDLINE="$CMDLINE_LINUX"
+			CMDLINE="${CMDLINE_LINUX:-quiet rw}"
 			if [[ $type == fallback ]] && [[ $DISABLE_FALLBACK != true ]]; then
 				initrd="$initrd-fallback"
 			elif [[ $type == recovery ]] && [[ $DISABLE_RECOVERY != true ]]; then
