@@ -5,4 +5,4 @@ if [[ $(id -u) != 0 ]]; then
 fi
 cd /
 rm boot/loader/entries/*-linux-*.conf
-find lib/modules -maxdepth 1 -name 'vmlinuz*' | /usr/share/libalpm/scripts/sd-boot
+find lib/modules -maxdepth 3 -type f -name 'vmlinuz' | /usr/share/libalpm/scripts/sd-boot
