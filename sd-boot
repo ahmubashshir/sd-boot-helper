@@ -39,13 +39,12 @@ while read -r kernel; do
 	kver=$(
 		echo "$kernel" |
 			/bin/sed -nE \
-				-e 's@^.*modules/([[:digit:]]+\.[[:digit:]]+)\..*/vmlinuz$@\1@p' \
-				-e 's@^boot/vmlinuz-(.*)-x.*@\1@p'
+				-e 's@^boot/vmlinuz-(.*)@\1@p'
 	)
 	if [[ -f "$kernel" ]]; then
-		[[ -f "boot/vmlinuz-$kver-x86_64" ]] || continue
+		[[ -f "boot/vmlinuz-$kver" ]] || continue
 		for type in default fallback recovery; do
-			initrd="initramfs-$kver-x86_64"
+			initrd="initramfs-$kver"
 			CMDLINE="${CMDLINE_LINUX:-quiet rw}"
 			if [[ $type == fallback ]] && [[ $DISABLE_FALLBACK != true ]]; then
 				initrd="$initrd-fallback"
@@ -61,20 +60,20 @@ while read -r kernel; do
 			else
 				printf '  Adding'
 			fi
-			printf ' entry for kernel %s (%s)\n' "$kver" "$type"
+			printf ' entry for %s (%s)\n' "$kver" "$type"
 			{
-				printf 'title   %s, kernel %s, %s\n' "$NAME" "$kver" "$type"
-				printf 'linux   /vmlinuz-%s-x86_64\n' "$kver"
+				printf 'title   %s, %s, %s\n' "$NAME" "$kver" "$type"
+				printf 'linux   /vmlinuz-%s\n' "$kver"
 				if [[ -f "boot/$vendor-ucode.img" ]]; then
 					printf 'initrd  /%s-ucode.img\n' "$vendor"
 				fi
 				printf 'initrd  /%s.img\n' "$initrd"
 				printf 'options root="%s" %s' "$ROOT_ARG" "$CMDLINE"
-			} > "boot/loader/entries/$ID-linux-$kver-$type.conf"
+			} > "boot/loader/entries/$ID-$kver-$type.conf"
 		done
 	else
 		for type in default fallback recovery; do
-			entry="$ID-linux-$kver-$type"
+			entry="$ID-$kver-$type"
 			if [[ -f "boot/loader/entries/$entry.conf" ]]; then
 				printf '  Removing entry for kernel %s (%s)\n' "$kver" "$type"
 				rm -f "boot/loader/entries/$entry.conf"

@@ -5,4 +5,5 @@ if [[ $(id -u) != 0 ]]; then
 fi
 cd /
 rm boot/loader/entries/*-linux-*.conf
+echo "Updating sd-boot entries."
 find lib/modules -maxdepth 3 -type f -name 'vmlinuz' | /usr/share/libalpm/scripts/sd-boot
