@@ -1,12 +1,11 @@
 [Trigger]
+Type = Path
 Operation = Install
 Operation = Upgrade
-Operation = Remove
-Type = Path
-Target = boot/vmlinuz*
+Target = usr/lib/modules/*/vmlinuz
 
 [Action]
 Description = Updating sd-boot entries.
 When = PostTransaction
-Exec = /usr/share/libalpm/scripts/sd-boot
+Exec = /usr/share/libalpm/scripts/sd-boot-install
 NeedsTargets

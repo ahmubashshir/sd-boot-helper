@@ -1,0 +1,92 @@
+#!/bin/bash -e
+
+source /etc/os-release
+source /etc/default/sd-boot
+
+ROOT=$(grep ' / ' /etc/mtab | cut -d ' ' -f1)
+types=(default)
+
+case ${ROOT_ARG_TYPE:-uuid} in
+	uuid)
+		ROOT_ARG="UUID=$(blkid -s UUID -o value "$ROOT" 2> /dev/null)"
+		;;
+	part-uuid)
+		ROOT_ARG="PARTUUID=$(blkid -s PARTUUID -o value "$ROOT" 2> /dev/null)"
+		;;
+	label)
+		ROOT_ARG="LABEL=$(blkid -s LABEL -o value "$ROOT" 2> /dev/null)"
+		;;
+	*)
+		echo "  Invalid ROOT_ARG_TYPE: $ROOT_ARG_TYPE" >&2
+		echo "  Falling back to ROOT_ARG_TYPE: uuid" >&2
+		echo
+		ROOT_ARG="UUID=$(blkid -s UUID -o value "$ROOT" 2> /dev/null)"
+		;;
+esac
+
+case $(sed -nE '0,/vendor_id.*: (.*)/s//\1/p' /proc/cpuinfo) in
+	GenuineIntel)
+		vendor='intel'
+		;;
+	AuthenticAMD)
+		vendor='amd'
+		;;
+	*)
+		vendor=''
+		;;
+esac
+
+if [[ $DISABLE_FALLBACK != true ]]; then
+	types+=("fallback")
+fi
+
+if [[ $DISABLE_RECOVERY != true ]]; then
+	types+=("recovery")
+fi
+
+while read -r line; do
+
+	if ! read -r pkgbase > /dev/null 2>&1 < "${line%/vmlinuz}/pkgbase"; then
+		# if the kernel has no pkgbase, we skip it
+		continue
+	fi
+
+	for type in "${types[@]}"; do
+		# Generate config for kernel
+		initrd="initramfs-$pkgbase"
+		CMDLINE="${CMDLINE_LINUX:-quiet rw}"
+		case $type in
+			default)
+				initrd="initramfs-$pkgbase"
+				;;
+			fallback)
+				initrd="initramfs-$pkgbase-fallback"
+				;;
+			recovery)
+				initrd="initramfs-$pkgbase-fallback"
+				CMDLINE="$CMDLINE single"
+				;;
+			*)
+				continue
+				;;
+		esac
+
+		printf '  '
+		if [[ -f boot/loader/entries/$ID-$pkgbase-$type.conf ]]; then
+			printf 'Updating'
+		else
+			printf 'Adding'
+		fi
+		printf ' entry for %s (%s)\n' "$pkgbase" "$type"
+		{
+			printf 'title   %s, %s, %s\n' "$NAME" "$pkgbase" "$type"
+			printf 'linux   /vmlinuz-%s\n' "$pkgbase"
+			if [[ -f "boot/$vendor-ucode.img" ]]; then
+				printf 'initrd  /%s-ucode.img\n' "$vendor"
+			fi
+			printf 'initrd  /%s.img\n' "$initrd"
+			printf 'options root="%s" %s' "$ROOT_ARG" "$CMDLINE"
+		} | install -Dm644 /dev/stdin "boot/loader/entries/$ID-$pkgbase-$type.conf"
+	done
+
+done
