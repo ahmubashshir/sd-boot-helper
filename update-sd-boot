@@ -4,6 +4,6 @@ if [[ $(id -u) != 0 ]]; then
 	exit
 fi
 cd /
-rm -f boot/loader/entries/*-linux-*.conf
 echo "Updating sd-boot entries."
-find usr/lib/modules/ -mindepth 2 -maxdepth 2 -type f -name 'vmlinuz' | /usr/share/libalpm/scripts/sd-boot-install
+find usr/lib/modules/ -mindepth 2 -maxdepth 2 -type f -name 'vmlinuz' |
+	/usr/share/libalpm/scripts/sd-boot-install
