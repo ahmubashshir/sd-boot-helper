@@ -2,6 +2,7 @@
 
 source /etc/os-release
 source /etc/default/sd-boot
+machineID=$(< /etc/machine-id)
 
 ROOT=$(grep ' / ' /etc/mtab | cut -d ' ' -f1)
 types=(default)
@@ -79,13 +80,14 @@ while read -r line; do
 		fi
 		printf ' entry for %s (%s)\n' "$pkgbase" "$type"
 		{
-			printf 'title   %s, %s, %s\n' "$NAME" "$pkgbase" "$type"
-			printf 'linux   /vmlinuz-%s\n' "$pkgbase"
+			printf 'title       %s, %s, %s\n' "$NAME" "$pkgbase" "$type"
+			printf 'machine-id  %s' "$machineID"
+			printf 'linux       /vmlinuz-%s\n' "$pkgbase"
 			if [[ -f "boot/$vendor-ucode.img" ]]; then
-				printf 'initrd  /%s-ucode.img\n' "$vendor"
+				printf 'initrd      /%s-ucode.img\n' "$vendor"
 			fi
-			printf 'initrd  /%s.img\n' "$initrd"
-			printf 'options root="%s" %s' "$ROOT_ARG" "$CMDLINE"
+			printf 'initrd      /%s.img\n' "$initrd"
+			printf 'options     root="%s" %s\n' "$ROOT_ARG" "$CMDLINE"
 		} | install -Dm644 /dev/stdin "boot/loader/entries/$ID-$pkgbase-$type.conf"
 	done
 
