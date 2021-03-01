@@ -81,7 +81,7 @@ while read -r line; do
 		printf ' entry for %s (%s)\n' "$pkgbase" "$type"
 		{
 			printf 'title       %s, %s, %s\n' "$NAME" "$pkgbase" "$type"
-			printf 'machine-id  %s' "$machineID"
+			printf 'machine-id  %s\n' "$machineID"
 			printf 'linux       /vmlinuz-%s\n' "$pkgbase"
 			if [[ -f "boot/$vendor-ucode.img" ]]; then
 				printf 'initrd      /%s-ucode.img\n' "$vendor"
