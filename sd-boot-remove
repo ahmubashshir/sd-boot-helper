@@ -7,6 +7,10 @@ while read -r line; do
 		# if the kernel has no pkgbase, we skip it
 		continue
 	fi
+	if read -r kernelbase > /dev/null 2>&1 < "${line%/vmlinuz}/kernelbase"; then
+		# manjaro built kernel support
+		pkgbase="$kernelbase"
+	fi
 
 	# remove sd-boot entries
 	for type in default fallback recovery; do
