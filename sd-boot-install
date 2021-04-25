@@ -4,7 +4,7 @@ source /etc/os-release
 source /etc/default/sd-boot
 machineID=$(< /etc/machine-id)
 
-ROOT=$(grep ' / ' /etc/mtab | cut -d ' ' -f1)
+ROOT=$(findmnt -n / -o SOURCE)
 types=(default)
 
 case ${ROOT_ARG_TYPE:-uuid} in
