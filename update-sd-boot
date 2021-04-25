@@ -1,9 +1,15 @@
 #!/bin/bash
+[[ $(bootctl is-installed) == "yes" ]] || {
+	printf "error: systemd-boot is not installed"
+	exit 1
+}
+
 if [[ $(id -u) != 0 ]]; then
 	echo "Run this as root"
 	exit
 fi
+
 cd /
 echo "Updating sd-boot entries."
-find usr/lib/modules/ -mindepth 2 -maxdepth 2 -type f -name 'vmlinuz' |
-	/usr/share/libalpm/scripts/sd-boot-install
+find usr/lib/modules/ -mindepth 2 -maxdepth 2 -type f -name 'vmlinuz' \
+	| /usr/share/libalpm/scripts/sd-boot-install

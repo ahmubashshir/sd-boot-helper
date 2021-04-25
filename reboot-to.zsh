@@ -1,5 +1,6 @@
 #compdef reboot-to
 __list_reboot_targets() {
+	[[ $(bootctl is-installed) == "yes" ]] || return
 	local -a targets ids
 	local each bootdir file source ID ids2
 	ID=$(awk -v FS== '/^ID=/{print $2}' /etc/os-release)
